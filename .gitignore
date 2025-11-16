@@ -237,7 +237,12 @@ docker-compose.override.yml
 # ==========================================
 # 数据库
 # ==========================================
+# SQL dumps and backups (but allow migration and init scripts)
 *.sql
+!scripts/**/*.sql
+!**/migrations/**/*.sql
+!**/flyway/**/*.sql
+
 *.sqlite
 *.db
 *.db-shm
