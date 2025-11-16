@@ -1,5 +1,7 @@
 package com.tradecraft.entity;
 
+import com.tradecraft.entity.enums.UserRole;
+import com.tradecraft.entity.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -56,23 +58,6 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    /**
-     * 用户角色枚举
-     */
-    public enum UserRole {
-        USER,
-        ADMIN
-    }
-
-    /**
-     * 用户状态枚举
-     */
-    public enum UserStatus {
-        ACTIVE,
-        INACTIVE,
-        SUSPENDED
-    }
 
     /**
      * 获取用户全名

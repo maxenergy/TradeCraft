@@ -1,5 +1,6 @@
 package com.tradecraft.entity;
 
+import com.tradecraft.entity.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -125,15 +126,6 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    /**
-     * 产品状态枚举
-     */
-    public enum ProductStatus {
-        ACTIVE,
-        INACTIVE,
-        OUT_OF_STOCK
-    }
 
     /**
      * 根据语言获取产品名称
