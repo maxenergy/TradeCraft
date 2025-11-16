@@ -1,0 +1,290 @@
+version: '3.8'
+
+# ==========================================
+# TradeCraft 生产环境 Docker Compose
+# ==========================================
+# 用于生产环境部署的容器编排配置
+# ==========================================
+
+services:
+  # ==========================================
+  # PostgreSQL 数据库
+  # ==========================================
+  db:
+    image: postgres:15-alpine
+    container_name: tradecraft-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tradecraft_prod}
+      POSTGRES_USER: ${DB_USERNAME:-tradecraft}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-tradecraft}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================
+  # Redis 缓存
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: tradecraft-redis-prod
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ==========================================
+  # 后端服务
+  # ==========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    image: tradecraft-backend:latest
+    container_name: tradecraft-backend-prod
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Spring Boot 配置
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-tradecraft_prod}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-tradecraft}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+      # Redis 配置
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # JWT 配置
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+
+      # AI 服务配置
+      AI_SERVICE_URL: http://ai-service:8000
+
+      # 支付配置
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_MODE: ${PAYPAL_MODE:-live}
+
+      # 阿里云 OSS
+      ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT}
+      ALIYUN_OSS_ACCESS_KEY_ID: ${ALIYUN_OSS_ACCESS_KEY_ID}
+      ALIYUN_OSS_ACCESS_KEY_SECRET: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+      ALIYUN_OSS_BUCKET_NAME: ${ALIYUN_OSS_BUCKET_NAME}
+
+      # 日志
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_TRADECRAFT: INFO
+
+      # JVM 选项
+      JAVA_OPTS: "-Xms1g -Xmx2g -XX:+UseG1GC"
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_logs:/app/logs
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ==========================================
+  # 前端服务
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    image: tradecraft-frontend:latest
+    container_name: tradecraft-frontend-prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # Next.js 配置
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${BACKEND_URL:-https://api.tradecraft.com}
+      NEXT_PUBLIC_AI_SERVICE_URL: ${AI_SERVICE_URL:-https://ai.tradecraft.com}
+
+      # Stripe 公钥
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+
+      # Google Analytics
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID}
+
+      # 网站配置
+      NEXT_PUBLIC_SITE_URL: ${FRONTEND_URL:-https://tradecraft.com}
+    ports:
+      - "3000:3000"
+    volumes:
+      - frontend_cache:/app/.next/cache
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+
+  # ==========================================
+  # AI 服务
+  # ==========================================
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile.prod
+    image: tradecraft-ai:latest
+    container_name: tradecraft-ai-prod
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      # Python 配置
+      PYTHONUNBUFFERED: 1
+
+      # Redis 配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # AI API 配置
+      WENXIN_API_KEY: ${WENXIN_API_KEY}
+      WENXIN_SECRET_KEY: ${WENXIN_SECRET_KEY}
+      GLM_API_KEY: ${GLM_API_KEY}
+      AZURE_TRANSLATOR_KEY: ${AZURE_TRANSLATOR_KEY}
+      AZURE_TRANSLATOR_REGION: ${AZURE_TRANSLATOR_REGION}
+
+      # Celery 配置
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@redis:6379/2
+    ports:
+      - "8000:8000"
+    volumes:
+      - ai_logs:/app/logs
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      replicas: 2
+
+  # ==========================================
+  # Nginx 反向代理
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: tradecraft-nginx-prod
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+      - ai-service
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - tradecraft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+# ==========================================
+# 数据卷
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+  frontend_cache:
+    driver: local
+  ai_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# ==========================================
+# 网络
+# ==========================================
+networks:
+  tradecraft-network:
+    driver: bridge
