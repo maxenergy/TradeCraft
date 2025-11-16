@@ -82,6 +82,94 @@
 
 ---
 
+### 4. **DEVELOPMENT_PLAN_PART3.md**（详细实现 - 第3部分）
+**包含Week 5-6的详细内容**
+
+涵盖内容：
+- **Day 21-25**: 前台首页与商品列表
+  - `HeroBanner.tsx` 轮播图组件
+  - `FeaturedProducts.tsx` 精选商品
+  - `CategoryShowcase.tsx` 分类展示
+  - `ProductCard.tsx` 商品卡片组件
+  - `ProductFilter.tsx` 筛选组件
+  - `ProductSort.tsx` 排序组件
+
+- **Day 26-30**: 商品详情与购物车UI
+  - `app/products/[id]/page.tsx` 商品详情页
+  - `ProductGallery.tsx` 图片画廊
+  - `ProductVariantSelector.tsx` 规格选择
+  - `RelatedProducts.tsx` 相关商品推荐
+  - 多语言和多货币实现
+
+**阅读时间**: 约45-60分钟
+**适合人群**: 前端开发者、UI/UX开发者
+
+---
+
+### 5. **DEVELOPMENT_PLAN_PART4.md**（详细实现 - 第4部分）
+**包含Week 7-8的详细内容**
+
+涵盖内容：
+- **Day 31-32**: 用户认证后端
+  - `JwtTokenProvider.java` JWT工具类
+  - `UserServiceImpl.java` 用户服务
+  - `AuthController.java` 认证控制器
+
+- **Day 33-34**: 用户认证前端
+  - `useAuthStore.ts` 认证状态管理
+  - `app/auth/login/page.tsx` 登录页
+  - `app/auth/register/page.tsx` 注册页
+
+- **Day 37-38**: 购物车后端
+  - `CartServiceImpl.java` 购物车服务
+  - `CartController.java` 购物车API
+
+**阅读时间**: 约30-45分钟
+**适合人群**: 全栈开发者、认证系统实现者
+
+---
+
+### 6. **DEVELOPMENT_PLAN_PART5.md**（详细实现 - 第5部分）
+**包含Week 9-12的详细内容**
+
+涵盖内容：
+- **Day 39-40**: 购物车前端与结账流程
+  - `useCartStore.ts` 购物车状态管理
+  - `CartDrawer.tsx` 购物车抽屉组件
+  - `app/checkout/page.tsx` 结账页面
+
+- **Day 41-46**: 支付集成
+  - `StripePaymentService.java` Stripe支付服务
+  - `PayPalPaymentService.java` PayPal支付服务
+  - `CodPaymentService.java` 货到付款服务
+  - `StripeCheckoutForm.tsx` Stripe前端组件
+
+- **Day 47-50**: 订单管理
+  - `OrderServiceImpl.java` 订单服务完整实现
+  - `app/admin/orders/page.tsx` 订单管理页面
+
+- **Day 51-55**: 数据分析与GA4
+  - `AnalyticsServiceImpl.java` 分析服务
+  - `app/admin/dashboard/page.tsx` 管理仪表盘
+  - Google Analytics 4集成
+
+- **Day 56-60**: 测试与优化
+  - 单元测试示例
+  - E2E测试（Playwright）
+  - 性能优化清单
+
+- **Day 61-64**: 生产环境部署
+  - `docker-compose.prod.yml` 生产环境配置
+  - `nginx.conf` Nginx配置
+  - `deploy.sh` 部署脚本
+  - 数据库备份策略
+  - MVP验收清单
+
+**阅读时间**: 约90-120分钟
+**适合人群**: 全栈开发者、DevOps工程师、项目负责人
+
+---
+
 ## 🗺️ 阅读路径建议
 
 ### 路径1: 快速了解（30分钟）
@@ -106,13 +194,13 @@
 
 ---
 
-### 路径3: 完整开发实现（3-4小时）
+### 路径3: 完整开发实现（6-8小时）
 适合：开发者、实际编码人员
 
 **第1步**（20分钟）: 总览
 - 阅读 `DEVELOPMENT_PLAN_SUMMARY.md`
 
-**第2步**（60分钟）: 基础架构
+**第2步**（60分钟）: 基础架构（Week 1-2）
 - 阅读 `DEVELOPMENT_PLAN.md` 完整内容
 - 重点关注：
   - 项目结构
@@ -120,7 +208,7 @@
   - Entity类定义
   - 配置文件
 
-**第3步**（90分钟）: 商品管理模块
+**第3步**（90分钟）: 商品管理模块（Week 3-4）
 - 阅读 `DEVELOPMENT_PLAN_PART2.md` 完整内容
 - 重点关注：
   - Repository层实现
@@ -129,11 +217,31 @@
   - 前端组件实现
   - AI服务实现
 
-**第4步**（60分钟）: 剩余模块
-- 根据`DEVELOPMENT_PLAN_SUMMARY.md`中的Week 5-12概述
-- 自行设计详细实现（参考Week 3-4的代码风格）
+**第4步**（60分钟）: 前台页面（Week 5-6）
+- 阅读 `DEVELOPMENT_PLAN_PART3.md` 完整内容
+- 重点关注：
+  - 首页组件
+  - 商品列表和筛选
+  - 商品详情页
+  - 多语言和多货币实现
 
-**目标**: 能够独立开始编码实现
+**第5步**（45分钟）: 用户认证与购物车（Week 7-8）
+- 阅读 `DEVELOPMENT_PLAN_PART4.md` 完整内容
+- 重点关注：
+  - JWT认证实现
+  - 用户注册登录
+  - 购物车功能
+
+**第6步**（120分钟）: 支付、订单、部署（Week 9-12）
+- 阅读 `DEVELOPMENT_PLAN_PART5.md` 完整内容
+- 重点关注：
+  - Stripe/PayPal支付集成
+  - 订单管理系统
+  - 数据分析和报表
+  - Docker生产部署
+  - MVP验收清单
+
+**目标**: 能够独立开始编码实现，并理解完整的12周开发流程
 
 ---
 
