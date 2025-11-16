@@ -1,0 +1,205 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  db:
+    image: postgres:15-alpine
+    container_name: tradecraft-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tradecraft_dev}
+      POSTGRES_USER: ${DB_USERNAME:-tradecraft}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - tradecraft-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-tradecraft}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: tradecraft-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:?Redis password required} --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - tradecraft-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Spring Boot后端（可选，也可以本地运行）
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tradecraft-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-tradecraft_dev}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-tradecraft}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ALIYUN_OSS_ACCESS_KEY: ${ALIYUN_OSS_ACCESS_KEY}
+      ALIYUN_OSS_SECRET_KEY: ${ALIYUN_OSS_SECRET_KEY}
+      ALIYUN_OSS_BUCKET: ${ALIYUN_OSS_BUCKET}
+      ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tradecraft-network
+    volumes:
+      - ./backend/logs:/app/logs
+    # 取消注释以启用调试
+    # ports:
+    #   - "5005:5005"
+    # environment:
+    #   JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+  # Next.js前端（可选，也可以本地运行）
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tradecraft-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
+    depends_on:
+      - backend
+    networks:
+      - tradecraft-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # FastAPI AI服务（可选，也可以本地运行）
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: tradecraft-ai
+    restart: unless-stopped
+    ports:
+      - "${AI_SERVICE_PORT:-8000}:8000"
+    environment:
+      ENVIRONMENT: ${NODE_ENV:-development}
+      WENXIN_API_KEY: ${WENXIN_API_KEY}
+      WENXIN_SECRET_KEY: ${WENXIN_SECRET_KEY}
+      GLM_API_KEY: ${GLM_API_KEY}
+      AZURE_TRANSLATOR_KEY: ${AZURE_TRANSLATOR_KEY}
+      AZURE_TRANSLATOR_REGION: ${AZURE_TRANSLATOR_REGION}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - tradecraft-network
+    volumes:
+      - ./ai-service:/app
+      - ai_cache:/app/.cache
+
+  # Meilisearch搜索引擎（可选）
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: tradecraft-search
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-changeme}
+      MEILI_ENV: ${NODE_ENV:-development}
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - tradecraft-network
+
+  # pgAdmin（可选，用于数据库管理）
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tradecraft-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tradecraft.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - tradecraft-network
+    depends_on:
+      - db
+    profiles:
+      - tools
+
+  # Redis Commander（可选，用于Redis管理）
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: tradecraft-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD}
+    networks:
+      - tradecraft-network
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  meilisearch_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  ai_cache:
+    driver: local
+
+networks:
+  tradecraft-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

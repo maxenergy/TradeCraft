@@ -1,0 +1,331 @@
+# ==========================================
+# 环境变量和配置
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ==========================================
+# IDE和编辑器
+# ==========================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# ==========================================
+# 操作系统
+# ==========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+
+# ==========================================
+# Java / Maven / Spring Boot
+# ==========================================
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Spring Boot
+spring-boot-starter-parent/
+
+# ==========================================
+# Node.js / Next.js / React
+# ==========================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+bower_components/
+
+# Production build
+.next/
+out/
+dist/
+build/
+
+# Cache
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Misc
+.DS_Store
+*.pem
+
+# Next.js specific
+.next/
+out/
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# ==========================================
+# Python / FastAPI
+# ==========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+
+# PyCharm
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# ==========================================
+# Docker
+# ==========================================
+docker-compose.override.yml
+.dockerignore
+
+# ==========================================
+# 数据库
+# ==========================================
+*.sql
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# PostgreSQL
+/data/postgres
+
+# H2 Database
+*.h2.db
+*.mv.db
+*.trace.db
+
+# ==========================================
+# 云服务和密钥
+# ==========================================
+
+# AWS
+.aws/
+*.pem
+
+# Google Cloud
+.gcloud/
+*-key.json
+service-account.json
+
+# Azure
+.azure/
+
+# Aliyun
+.aliyun/
+
+# ==========================================
+# 备份和临时文件
+# ==========================================
+*.bak
+*.tmp
+*.temp
+*~
+backup/
+backups/
+*.backup
+
+# ==========================================
+# 项目特定
+# ==========================================
+
+# 上传的文件
+uploads/
+public/uploads/
+
+# 生成的文件
+generated/
+
+# 测试数据
+test-data/
+fixtures/
+
+# 文档构建输出
+docs/_build/
+site/
+
+# 静态文件收集
+staticfiles/
+static_root/
+
+# 媒体文件（开发环境）
+media/
+
+# ==========================================
+# 其他
+# ==========================================
+
+# Sass
+.sass-cache/
+*.css.map
+*.sass.map
+*.scss.map
+
+# Webpack
+.webpack/
+
+# Storybook
+storybook-static/
+
+# ==========================================
+# 保留的文件（不要忽略）
+# ==========================================
+!.gitkeep
+!.github/
+!.vscode/extensions.json
