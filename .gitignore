@@ -241,6 +241,7 @@ docker-compose.override.yml
 *.sql
 !scripts/**/*.sql
 !**/migrations/**/*.sql
+!**/migration/**/*.sql
 !**/flyway/**/*.sql
 
 *.sqlite
