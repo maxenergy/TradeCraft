@@ -23,7 +23,7 @@ const nextConfig = {
   i18n: {
     locales: ['zh-CN', 'en', 'id'],
     defaultLocale: 'zh-CN',
-    localeDetection: true,
+    localeDetection: false,
   },
 
   // 环境变量
@@ -53,10 +53,11 @@ const nextConfig = {
 
   // 重写
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },
@@ -102,8 +103,7 @@ const nextConfig = {
 
   // 实验性功能
   experimental: {
-    // 服务端组件
-    serverActions: true,
+    // Server Actions 在 Next.js 14 中默认启用
   },
 
   // 性能配置
