@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ImageUploader } from '@/components/admin/product/ImageUploader';
 import axios from 'axios';
+import withAuth from '@/components/auth/withAuth';
 
 const ProductForm = () => {
   const { register, handleSubmit, setValue, getValues } = useForm();
@@ -91,7 +92,7 @@ const ProductForm = () => {
   );
 };
 
-export default function AddProductPage() {
+function AddProductPage() {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
@@ -101,3 +102,5 @@ export default function AddProductPage() {
     </div>
   );
 }
+
+export default withAuth(AddProductPage);
