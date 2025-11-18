@@ -1,0 +1,144 @@
+spring:
+  application:
+    name: tradecraft-backend
+
+  # 使用H2内存数据库进行本地开发
+  datasource:
+    url: jdbc:h2:mem:tradecraft_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      pool-name: TradeCraft-HikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # JPA配置 - 使用H2
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop  # 每次启动重新创建数据库
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # 禁用Redis (本地开发不需要)
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  # 禁用缓存
+  cache:
+    type: none
+
+  # 禁用Session Redis
+  session:
+    store-type: none
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # 禁用邮件服务 (本地开发)
+  mail:
+    host: smtp.example.com
+    port: 587
+
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+# Server配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+    include-exception: true
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.tradecraft: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'
+
+# 禁用Flyway (使用JPA自动创建表)
+spring.flyway:
+  enabled: false
+
+# JWT配置
+jwt:
+  secret: local-dev-jwt-secret-key-min-512-bits-for-development-only-please-change-in-production-environment
+  expiration: 86400000  # 24小时
+  refresh-expiration: 604800000  # 7天
+
+# CORS配置
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:3001
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+  allowed-headers: '*'
+  allow-credentials: true
+  max-age: 3600
+
+# 应用配置
+app:
+  frontend-url: http://localhost:3001
+
+  pagination:
+    default-page-size: 20
+    max-page-size: 100
+
+  security:
+    password:
+      min-length: 8
+      require-uppercase: false
+      require-lowercase: false
+      require-digit: false
+      require-special: false
+    rate-limit:
+      enabled: false
+
+# SpringDoc OpenAPI配置
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
