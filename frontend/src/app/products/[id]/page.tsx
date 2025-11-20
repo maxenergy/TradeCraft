@@ -30,9 +30,11 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async () => {
     try {
-      // TODO: Implement API call to fetch product
-      // const response = await productApi.getProduct(productId);
-      // setProduct(response.data.data);
+      const { productApi } = await import('@/lib/product-api');
+      const response = await productApi.getProductById(productId);
+      if (response.success && response.data) {
+        setProduct(response.data);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch product:', error);
@@ -46,8 +48,8 @@ export default function ProductDetailPage() {
     setAddingToCart(true);
 
     try {
-      // TODO: Implement API call to add to cart
-      // await cartApi.addToCart(product.id, quantity);
+      const { cartApi } = await import('@/lib/cart-api');
+      await cartApi.addToCart({ productId: product.id, quantity });
       alert('已添加到购物车');
       setQuantity(1);
     } catch (error: any) {
@@ -63,7 +65,8 @@ export default function ProductDetailPage() {
 
     try {
       // Add to cart first
-      // await cartApi.addToCart(product.id, quantity);
+      const { cartApi } = await import('@/lib/cart-api');
+      await cartApi.addToCart({ productId: product.id, quantity });
       // Redirect to checkout
       router.push('/checkout');
     } catch (error: any) {
@@ -74,7 +77,7 @@ export default function ProductDetailPage() {
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && newQuantity <= (product?.stock || 0)) {
+    if (newQuantity >= 1 && newQuantity <= (product?.stockQuantity || 0)) {
       setQuantity(newQuantity);
     }
   };
@@ -125,9 +128,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Mock images for demonstration
-  const images = product.imageUrl
-    ? [product.imageUrl, product.imageUrl, product.imageUrl]
+  // Get product images
+  const images = product.images?.gallery && product.images.gallery.length > 0
+    ? product.images.gallery
+    : product.images?.main
+    ? [product.images.main]
     : [];
 
   return (
@@ -200,15 +205,11 @@ export default function ProductDetailPage() {
                     <WishlistButton productId={product.id} size="lg" className="shadow-lg" />
                   </div>
 
-                  {/* Discount Badge */}
-                  {product.originalPrice && product.originalPrice > product.price && (
+                  {/* Featured Badge */}
+                  {product.isFeatured && (
                     <div className="absolute top-4 left-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-500 text-white">
-                        -
-                        {Math.round(
-                          ((product.originalPrice - product.price) / product.originalPrice) * 100
-                        )}
-                        %
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-500 text-white">
+                        精选
                       </span>
                     </div>
                   )}
@@ -245,11 +246,11 @@ export default function ProductDetailPage() {
                   {product.name}
                 </h1>
 
-                {/* Rating and Reviews */}
+                {/* Rating and Reviews - TODO: Add rating/review system */}
                 <div className="flex items-center mb-4">
-                  {renderStars(Math.round(product.rating || 0))}
+                  {renderStars(4)}
                   <span className="ml-2 text-sm text-gray-600">
-                    {product.rating?.toFixed(1)} ({product.reviewCount || 0} 评价)
+                    4.0 (0 评价)
                   </span>
                 </div>
 
@@ -257,20 +258,15 @@ export default function ProductDetailPage() {
                 <div className="mb-6">
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl font-bold text-primary-600">
-                      {formatPrice(product.price, 'CNY')}
+                      {formatPrice(product.price, product.currency as any)}
                     </span>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-lg text-gray-500 line-through">
-                        {formatPrice(product.originalPrice, 'CNY')}
-                      </span>
-                    )}
                   </div>
                   <p className="text-sm text-gray-600 mt-1">含税价格</p>
                 </div>
 
                 {/* Stock Status */}
                 <div className="mb-6 pb-6 border-b">
-                  {product.stock > 0 ? (
+                  {product.inStock && product.stockQuantity > 0 ? (
                     <div className="flex items-center text-green-600">
                       <svg
                         className="w-5 h-5 mr-2"
@@ -284,7 +280,7 @@ export default function ProductDetailPage() {
                         <path d="M5 13l4 4L19 7" />
                       </svg>
                       <span className="font-medium">
-                        有货 ({product.stock} 件可售)
+                        有货 ({product.stockQuantity} 件可售)
                       </span>
                     </div>
                   ) : (
@@ -331,7 +327,7 @@ export default function ProductDetailPage() {
                       value={quantity}
                       onChange={(e) => {
                         const value = parseInt(e.target.value);
-                        if (value >= 1 && value <= product.stock) {
+                        if (value >= 1 && value <= product.stockQuantity) {
                           setQuantity(value);
                         }
                       }}
@@ -339,7 +335,7 @@ export default function ProductDetailPage() {
                     />
                     <button
                       onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= product.stock}
+                      disabled={quantity >= product.stockQuantity}
                       className="w-10 h-10 rounded-md border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <svg
@@ -361,7 +357,7 @@ export default function ProductDetailPage() {
                 <div className="space-y-3">
                   <Button
                     onClick={handleAddToCart}
-                    disabled={product.stock === 0 || addingToCart}
+                    disabled={!product.inStock || product.stockQuantity === 0 || addingToCart}
                     className="w-full"
                     size="lg"
                   >
@@ -369,7 +365,7 @@ export default function ProductDetailPage() {
                   </Button>
                   <Button
                     onClick={handleBuyNow}
-                    disabled={product.stock === 0}
+                    disabled={!product.inStock || product.stockQuantity === 0}
                     variant="outline"
                     className="w-full"
                     size="lg"
@@ -439,7 +435,7 @@ export default function ProductDetailPage() {
                     : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                用户评价 ({product.reviewCount || 0})
+                用户评价 (0)
               </button>
             </div>
           </div>
@@ -460,13 +456,13 @@ export default function ProductDetailPage() {
                   <span className="text-gray-900 font-medium">{product.sku || '-'}</span>
                 </div>
                 <div className="flex py-3 border-b">
-                  <span className="text-gray-600 w-32">品牌</span>
-                  <span className="text-gray-900 font-medium">{product.brand || '-'}</span>
+                  <span className="text-gray-600 w-32">分类</span>
+                  <span className="text-gray-900 font-medium">{product.categoryName || '-'}</span>
                 </div>
                 <div className="flex py-3 border-b">
                   <span className="text-gray-600 w-32">重量</span>
                   <span className="text-gray-900 font-medium">
-                    {product.weight ? `${product.weight} kg` : '-'}
+                    {product.weightGrams ? `${(product.weightGrams / 1000).toFixed(2)} kg` : '-'}
                   </span>
                 </div>
                 <div className="flex py-3 border-b">
@@ -476,6 +472,16 @@ export default function ProductDetailPage() {
                       ? new Date(product.createdAt).toLocaleDateString('zh-CN')
                       : '-'}
                   </span>
+                </div>
+                <div className="flex py-3 border-b">
+                  <span className="text-gray-600 w-32">库存状态</span>
+                  <span className="text-gray-900 font-medium">
+                    {product.status === 'ACTIVE' ? '在售' : product.status === 'OUT_OF_STOCK' ? '缺货' : '下架'}
+                  </span>
+                </div>
+                <div className="flex py-3 border-b">
+                  <span className="text-gray-600 w-32">可售数量</span>
+                  <span className="text-gray-900 font-medium">{product.stockQuantity} 件</span>
                 </div>
               </div>
             )}

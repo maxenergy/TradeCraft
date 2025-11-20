@@ -4,6 +4,7 @@ import com.tradecraft.dto.request.CreateOrderRequest;
 import com.tradecraft.dto.response.ApiResponse;
 import com.tradecraft.dto.response.OrderResponse;
 import com.tradecraft.entity.enums.OrderStatus;
+import com.tradecraft.security.CustomUserPrincipal;
 import com.tradecraft.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -214,11 +215,11 @@ public class OrderController {
 
     /**
      * 从UserDetails获取用户ID
-     * TODO: 实现实际的用户ID获取逻辑
      */
     private Long getUserIdFromUserDetails(UserDetails userDetails) {
-        // 这里应该从UserDetails中获取实际的用户ID
-        // 暂时返回固定值用于测试
-        return 1L;
+        if (userDetails instanceof CustomUserPrincipal) {
+            return ((CustomUserPrincipal) userDetails).getId();
+        }
+        throw new IllegalStateException("Unexpected UserDetails type: " + userDetails.getClass().getName());
     }
 }

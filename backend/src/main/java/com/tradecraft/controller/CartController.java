@@ -3,6 +3,7 @@ package com.tradecraft.controller;
 import com.tradecraft.dto.response.ApiResponse;
 import com.tradecraft.dto.response.CartItemResponse;
 import com.tradecraft.entity.CartItem;
+import com.tradecraft.security.CustomUserPrincipal;
 import com.tradecraft.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -146,12 +147,12 @@ public class CartController {
 
     /**
      * 从UserDetails获取用户ID
-     * TODO: 实现实际的用户ID获取逻辑
      */
     private Long getUserIdFromUserDetails(UserDetails userDetails) {
-        // 这里应该从UserDetails中获取实际的用户ID
-        // 暂时返回固定值用于测试
-        return 1L;
+        if (userDetails instanceof CustomUserPrincipal) {
+            return ((CustomUserPrincipal) userDetails).getId();
+        }
+        throw new IllegalStateException("Unexpected UserDetails type: " + userDetails.getClass().getName());
     }
 
     /**
