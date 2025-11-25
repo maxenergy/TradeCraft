@@ -36,19 +36,26 @@ export default function ProfilePage() {
 
   const fetchUserProfile = async () => {
     try {
-      // TODO: Implement API call to fetch user profile
-      // const response = await userApi.getProfile();
-      // setUser(response.data.data);
-      // setFormData({
-      //   firstName: response.data.data.firstName,
-      //   lastName: response.data.data.lastName,
-      //   email: response.data.data.email,
-      //   phone: response.data.data.phone || '',
-      // });
+      const { userApi } = await import('@/lib/user-api');
+      const response = await userApi.getCurrentUser();
+
+      if (response.success && response.data) {
+        setUser(response.data);
+        setFormData({
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          phone: response.data.phone || '',
+        });
+      }
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
       setLoading(false);
+      // Redirect to login if unauthorized
+      if ((error as any)?.response?.status === 401) {
+        router.push('/login');
+      }
     }
   };
 
@@ -103,8 +110,13 @@ export default function ProfilePage() {
     setSubmitting(true);
 
     try {
-      // TODO: Implement API call to update profile
-      // await userApi.updateProfile(formData);
+      const { userApi } = await import('@/lib/user-api');
+      await userApi.updateCurrentUser({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+      });
+
       alert('个人资料已更新');
       setEditing(false);
       fetchUserProfile();

@@ -33,12 +33,12 @@ export default function HomePage() {
         productApi.getProducts({ page: 0, size: 4 })
       ]);
 
-      if (featuredResponse.data.success && featuredResponse.data.data) {
-        setFeaturedProducts(featuredResponse.data.data);
+      if (featuredResponse.success && featuredResponse.data) {
+        setFeaturedProducts(featuredResponse.data);
       }
 
-      if (newResponse.data.success && newResponse.data.data) {
-        setNewProducts(newResponse.data.data);
+      if (newResponse.success && newResponse.data) {
+        setNewProducts(newResponse.data);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
