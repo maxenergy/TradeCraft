@@ -25,13 +25,27 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // TODO: Implement filtered API call
-      // For now, use basic product fetch
-      const response = await productApi.getProducts({ page, size: 20 });
+      // Use search API if there's a search query
+      let response;
+      if (filters.searchQuery) {
+        response = await productApi.searchProducts(filters.searchQuery, { page, size: 20 });
+      } else if (filters.categories && filters.categories.length > 0) {
+        // If only one category is selected, use category filter
+        response = await productApi.getProductsByCategory(filters.categories[0], { page, size: 20 });
+      } else if (filters.priceRange) {
+        response = await productApi.getProductsByPriceRange(
+          filters.priceRange.min,
+          filters.priceRange.max,
+          { page, size: 20 }
+        );
+      } else {
+        response = await productApi.getProducts({ page, size: 20 });
+      }
 
-      if (response.data.success && response.data.data) {
-        let filteredProducts = response.data.data;
+      if (response.success && response.data) {
+        let filteredProducts = response.data;
 
         // Client-side filtering (should be done server-side in production)
         if (filters.searchQuery) {
@@ -83,8 +97,8 @@ export default function ProductsPage() {
 
         setProducts(filteredProducts);
 
-        if (response.data.pagination) {
-          setTotalPages(response.data.pagination.totalPages || 0);
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages || 0);
         }
       }
     } catch (err: any) {

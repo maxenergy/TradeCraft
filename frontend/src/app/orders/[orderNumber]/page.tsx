@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { orderApi } from '@/lib/api/order-api';
+import { orderApi } from '@/lib/order-api';
 import { Order } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -25,9 +25,9 @@ export default function OrderDetailPage() {
 
   const fetchOrder = async () => {
     try {
-      const response = await orderApi.getOrder(orderNumber);
-      if (response.data.success && response.data.data) {
-        setOrder(response.data.data);
+      const response = await orderApi.getOrderByNumber(orderNumber);
+      if (response.success && response.data) {
+        setOrder(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch order:', error);

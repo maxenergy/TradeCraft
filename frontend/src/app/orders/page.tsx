@@ -22,10 +22,11 @@ export default function OrdersPage() {
     try {
       setLoading(true);
       const response = await orderApi.getMyOrders({ page, size: 10 });
-      if (response.data.success && response.data.data) {
-        setOrders(response.data.data);
-        if (response.data.pagination) {
-          setTotalPages(response.data.pagination.totalPages || 0);
+
+      if (response.success && response.data) {
+        setOrders(response.data);
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages || 0);
         }
       }
     } catch (error) {
@@ -119,7 +120,7 @@ export default function OrdersPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">
-                          共 {order.itemCount} 件商品
+                          共 {order.items?.length || 0} 件商品
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
                           {formatPrice(order.total, order.currency)}
